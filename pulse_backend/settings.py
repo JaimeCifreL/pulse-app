@@ -130,8 +130,10 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # Celery Configuration
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# Usar Redis en producción si está disponible, sino usar memoria
+REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_BROKER_URL = REDIS_URL if not DEBUG or os.getenv('REDIS_URL') else 'memory://'
+CELERY_RESULT_BACKEND = REDIS_URL if not DEBUG or os.getenv('REDIS_URL') else 'cache+memory://'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

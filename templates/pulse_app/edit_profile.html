@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}Configuración del Perfil - Pulse{% endblock %}
+
+{% block page_title %}Editar Perfil{% endblock %}
+
+{% block content %}
+<div class="edit-profile-container">
+    <div class="settings-header">
+        <h1 class="page-main-title">Configuración del Perfil</h1>
+        <a href="{% url 'profile' username=user.username %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+
+    {% if error %}
+        <div class="alert alert-error">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="edit-profile-form">
+        {% csrf_token %}
+
+        <div class="form-section">
+            <h2>Información Personal</h2>
+
+            <!-- Foto de perfil -->
+            <div class="form-group profile-photo-section">
+                <label>Foto de Perfil</label>
+                <div class="photo-upload-container">
+                    <div class="current-photo">
+                        {% if user.profile_photo %}
+                            <img src="{{ user.profile_photo.url }}" alt="Foto de perfil" id="photo-preview">
+                        {% else %}
+                            <div class="profile-photo-placeholder" id="photo-preview">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="photo-upload-actions">
+                        <input type="file" id="profile_photo" name="profile_photo" accept="image/*" class="file-input">
+                        <label for="profile_photo" class="btn btn-primary btn-sm">
+                            {% if user.profile_photo %}Cambiar foto{% else %}Subir foto{% endif %}
+                        </label>
+                        {% if user.profile_photo %}
+                            <button type="button" onclick="removePhoto()" class="btn btn-secondary btn-sm">Eliminar foto</button>
+                        {% endif %}
+                        <small class="form-help">JPG, PNG o GIF. Máximo 5MB.</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nombre visible -->
+            <div class="form-group">
+                <label for="display_name">Nombre Visible</label>
+                <input type="text" id="display_name" name="display_name" value="{{ user.display_name|default:'' }}" 
+                       class="form-input" maxlength="100">
+                <small class="form-help">Tu nombre real o como quieres que te llamen</small>
+            </div>
+
+            <!-- Nombre de usuario -->
+            <div class="form-group">
+                <label for="username">Nombre de Usuario / @handle</label>
+                <div class="username-input">
+                    <span class="username-prefix">@</span>
+                    <input type="text" id="username" name="username" value="{{ user.username }}" 
+                           class="form-input username-field" required maxlength="150">
+                </div>
+                <small class="form-help">Tu identificador único en Pulse</small>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label for="email">Correo Electrónico</label>
+                <input type="email" id="email" name="email" value="{{ user.email }}" 
+                       class="form-input" required>
+                <small class="form-help">No será visible públicamente</small>
+            </div>
+
+            <!-- Bio -->
+            <div class="form-group">
+                <label for="bio">Biografía</label>
+                <textarea id="bio" name="bio" class="form-textarea" 
+                          maxlength="500" rows="4">{{ user.bio|default:'' }}</textarea>
+                <small class="form-help" id="bio-counter">{{ user.bio|length|default:0 }} / 500 caracteres</small>
+            </div>
+
+            <!-- Fecha de nacimiento -->
+            <div class="form-group">
+                <label for="date_of_birth">Fecha de Nacimiento</label>
+                <input type="date" id="date_of_birth" name="date_of_birth" 
+                       value="{% if user.date_of_birth %}{{ user.date_of_birth|date:'Y-m-d' }}{% endif %}" 
+                       class="form-input">
+                <small class="form-help">Esta información solo es visible para ti</small>
+            </div>
+
+            <!-- Género -->
+            <div class="form-group">
+                <label for="gender">Género (Opcional)</label>
+                <select id="gender" name="gender" class="form-input">
+                    <option value="">Prefiero no especificar</option>
+                    <option value="Masculino" {% if user.gender == 'Masculino' %}selected{% endif %}>Masculino</option>
+                    <option value="Femenino" {% if user.gender == 'Femenino' %}selected{% endif %}>Femenino</option>
+                    <option value="No binario" {% if user.gender == 'No binario' %}selected{% endif %}>No binario</option>
+                    <option value="Otro" {% if user.gender == 'Otro' %}selected{% endif %}>Otro</option>
+                </select>
+            </div>
+
+            <!-- Pronombres -->
+            <div class="form-group">
+                <label for="pronouns">Pronombres (Opcional)</label>
+                <input type="text" id="pronouns" name="pronouns" value="{{ user.pronouns|default:'' }}" 
+                       class="form-input" maxlength="50" placeholder="ej: él/ella, elle, they/them">
+                <small class="form-help">Cómo te gustaría que otros se refieran a ti</small>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Privacidad</h2>
+
+            <!-- Cuenta privada -->
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="is_private" {% if user.is_private %}checked{% endif %}>
+                    <span>Cuenta Privada</span>
+                </label>
+                <small class="form-help">Solo tus seguidores aprobados podrán ver tus publicaciones</small>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Cambiar Contraseña</h2>
+            <small class="form-help">Deja estos campos vacíos si no quieres cambiar tu contraseña</small>
+
+            <!-- Nueva contraseña -->
+            <div class="form-group">
+                <label for="new_password">Nueva Contraseña</label>
+                <input type="password" id="new_password" name="new_password" class="form-input">
+                <small class="form-help">Mínimo 8 caracteres</small>
+            </div>
+
+            <!-- Confirmar contraseña -->
+            <div class="form-group">
+                <label for="confirm_password">Confirmar Nueva Contraseña</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-input">
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'profile' username=user.username %}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Función para eliminar foto de perfil
+    function removePhoto() {
+        if (confirm('¿Estás seguro de que quieres eliminar tu foto de perfil?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '';
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken;
+            
+            const removeInput = document.createElement('input');
+            removeInput.type = 'hidden';
+            removeInput.name = 'remove_photo';
+            removeInput.value = 'true';
+            
+            form.appendChild(csrfInput);
+            form.appendChild(removeInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // Preview de foto de perfil
+    document.getElementById('profile_photo').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validar tamaño (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('El archivo es demasiado grande. Máximo 5MB.');
+                this.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const preview = document.getElementById('photo-preview');
+                if (preview.tagName === 'IMG') {
+                    preview.src = event.target.result;
+                } else {
+                    const img = document.createElement('img');
+                    img.src = event.target.result;
+                    img.id = 'photo-preview';
+                    preview.parentNode.replaceChild(img, preview);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Contador de caracteres para bio
+    document.getElementById('bio').addEventListener('input', function() {
+        const counter = document.getElementById('bio-counter');
+        counter.textContent = this.value.length + ' / 500 caracteres';
+    });
+
+    // Allow back navigation in edit profile
+    if (window.innerWidth <= 768) {
+        document.body.style.overscrollBehaviorX = 'auto';
+    }
+</script>
+{% endblock %}

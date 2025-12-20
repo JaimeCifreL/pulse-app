@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load poll_filters %}
+
+{% block title %}Feed - Pulse{% endblock %}
+
+{% block page_title %}Feed{% endblock %}
+
+{% block content %}
+<div class="feed-container">
+    {% if user.is_authenticated %}
+    <!-- Feed Header con Logo -->
+    <div class="feed-header-hero" id="feedHeader">
+        <button class="close-feed-header" id="closeFeedHeader" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <div class="feed-logo-container">
+            <img src="/media/logo/XX_Logo_Pulse_1.png" alt="Pulse" class="feed-logo">
+        </div>
+        <h1 class="feed-title">
+            <span class="feed-title-gradient">Pulse</span>
+        </h1>
+        <p class="feed-tagline">Lo que importa, dura</p>
+    </div>
+    
+    <!-- Feed Tabs -->
+    <div class="feed-tabs" id="feedTabs">
+        <a href="?feed=for_you" class="feed-tab {% if feed_type == 'for_you' %}active{% endif %}" data-feed="for_you" data-index="0">
+            Para ti
+        </a>
+        <a href="?feed=following" class="feed-tab {% if feed_type == 'following' %}active{% endif %}" data-feed="following" data-index="1">
+            Siguiendo
+        </a>
+    </div>
+    
+    <!-- Swipe Indicator -->
+    {% else %}
+    <h1 class="page-main-title">Descubre Pulse</h1>
+    {% endif %}
+    
+    {% if posts %}
+        <div class="posts-list">
+            {% for post in posts %}
+                <div class="post-card" data-post-id="{{ post.id }}">
+                    <div class="post-header">
+                        {% if post.author.profile_photo %}
+                            <img src="{{ post.author.profile_photo.url }}" alt="Avatar" class="avatar">
+                        {% else %}
+                            <div class="avatar-placeholder">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                        {% endif %}
+                        <div class="post-header-info">
+                            <a href="{% url 'profile' username=post.author.username %}" class="username">
+                                @{{ post.author.username }}
+                            </a>
+                            <span class="time-remaining" 
+                                  data-time-remaining="{{ post.time_remaining_seconds }}"
+                                  data-loaded-at="{{ now_timestamp }}">
+                                {% if post.time_remaining_seconds|default:0 <= 0 %}
+                                    Expirado
+                                {% else %}
+                                    <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg> {{ post.time_remaining_seconds }}s
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if post.author == user %}
+                            <div class="post-menu-container">
+                                <button class="post-menu-btn" onclick="togglePostMenu('{{ post.id }}')">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <circle cx="12" cy="5" r="2"></circle>
+                                        <circle cx="12" cy="12" r="2"></circle>
+                                        <circle cx="12" cy="19" r="2"></circle>
+                                    </svg>
+                                </button>
+                                <div class="post-menu-dropdown" id="menu-{{ post.id }}" style="display: none;">
+                                    <a href="{% url 'post_stats' post_id=post.id %}" class="menu-item">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="12" y1="20" x2="12" y2="10"></line>
+                                            <line x1="18" y1="20" x2="18" y2="4"></line>
+                                            <line x1="6" y1="20" x2="6" y2="16"></line>
+                                        </svg>
+                                        Ver estadísticas
+                                    </a>
+                                    <button class="menu-item" onclick="togglePinPost('{{ post.id }}')">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 17v5"></path>
+                                            <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"></path>
+                                        </svg>
+                                        {% if post.is_pinned %}Desfijar{% else %}Fijar en perfil{% endif %}
+                                    </button>
+                                    <button class="menu-item" onclick="toggleComments('{{ post.id }}')">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                            {% if post.comments_disabled %}
+                                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                                            {% endif %}
+                                        </svg>
+                                        {% if post.comments_disabled %}Activar comentarios{% else %}Desactivar comentarios{% endif %}
+                                    </button>
+                                    <button class="menu-item delete" onclick="deletePost('{{ post.id }}')">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                        Eliminar post
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="post-content">
+                        {% if post.post_type == 'photo' or post.post_type == 'video' %}
+                            {% if post.content_url %}
+                                <div class="media-container">
+                                    {% if post.post_type == 'photo' %}
+                                        <img src="{{ post.content_url.url }}" alt="Post content" class="media-image">
+                                    {% else %}
+                                        <video controls class="media-video">
+                                            <source src="{{ post.content_url.url }}" type="video/mp4">
+                                        </video>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% elif post.post_type == 'text' %}
+                            <p class="text-content">{{ post.text_content|linkify }}</p>
+                        {% elif post.post_type == 'poll' %}
+                            <div class="poll-container" data-post-id="{{ post.id }}">
+                                <h3>{{ post.poll.question }}</h3>
+                                <div class="poll-options">
+                                    {% for option in post.poll.options.all %}
+                                        <div class="poll-option" onclick="votePoll('{{ post.id }}', '{{ option.id }}')" style="cursor: pointer;">
+                                            <div class="poll-option-bar" style="width: {{ option.percentage }}%;"></div>
+                                            <div class="poll-option-content">
+                                                <span class="poll-option-text">{{ option.text }}</span>
+                                                <span class="poll-option-votes">{{ option.votes }} votos ({{ option.percentage }}%)</span>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="post-footer">
+                        <div class="post-actions">
+                            <a href="{% url 'post_detail' post_id=post.id %}" class="action-btn">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> <span>{{ post.comments_count }}</span>
+                            </a>
+                            <button class="action-btn" onclick="likePost('{{ post.id }}')">
+                                {% if post.is_liked %}<svg class="like-icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>{% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>{% endif %} <span data-likes-count="{{ post.likes_count }}">{{ post.likes_count }}</span>
+                            </button>
+                            <button class="action-btn {% if post.is_reposted %}reposted{% endif %}" onclick="repostPost('{{ post.id }}')">
+                                <svg viewBox="0 0 24 24" fill="{% if post.is_reposted %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="17 1 21 5 17 9"></polyline>
+                                    <path d="M3 11v-4a4 4 0 0 1 4-4h14"></path>
+                                    <polyline points="7 23 3 19 7 15"></polyline>
+                                    <path d="M21 13v4a4 4 0 0 1-4 4H3"></path>
+                                </svg><span>{{ post.reposts_count }}</span>
+                            </button>
+                            <button class="action-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paginación -->
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">Primera</a>
+                <a href="?page={{ page_obj.previous_page_number }}">« Anterior</a>
+            {% endif %}
+
+            <span class="page-info">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Siguiente »</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No hay posts para mostrar</p>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'login' %}" class="btn btn-primary">Inicia sesión para ver el feed</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% if user.is_authenticated %}
+<script src="{% static 'js/swipe.js' %}"></script>
+<script>
+    // Feed swipe handler
+    if (window.innerWidth <= 768) {
+        const feedTabs = document.querySelectorAll('.feed-tab');
+        const feedType = '{{ feed_type }}';
+        const currentIndex = feedType === 'for_you' ? 0 : 1;
+        
+        const feedSwiper = new TabSwiper({
+            tabs: feedTabs,
+            currentIndex: currentIndex,
+            onChange: (newIndex) => {
+                const newFeedType = newIndex === 0 ? 'for_you' : 'following';
+                window.location.href = `?feed=${newFeedType}`;
+            },
+            allowBackNavigation: false
+        });
+    }
+</script>
+{% endif %}
+{% endblock %}

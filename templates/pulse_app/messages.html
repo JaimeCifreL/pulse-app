@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Mensajes - Pulse{% endblock %}
+
+{% block page_title %}Mensajes{% endblock %}
+
+{% block content %}
+<div class="messages-container">
+    <div class="chats-list">
+        <h2 class="page-main-title">Mensajes directos</h2>
+        
+        <div class="search-chats">
+            <form method="get" action="{% url 'messages' %}" class="search-form">
+                <input type="text" name="q" placeholder="Buscar usuarios..." class="search-input" value="{{ search_query }}">
+                <button type="submit" class="search-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </button>
+            </form>
+        </div>
+
+        {% if search_query and search_results %}
+            <div class="search-results-section">
+                <h3>Resultados de búsqueda</h3>
+                <div class="users-results">
+                    {% for user_item in search_results %}
+                        <a href="{% url 'start_chat' user_id=user_item.id %}" class="user-result-item">
+                            {% if user_item.profile_photo %}
+                                <img src="{{ user_item.profile_photo.url }}" alt="{{ user_item.username }}" class="user-result-avatar">
+                            {% else %}
+                                <div class="user-result-avatar-placeholder">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <div class="user-result-info">
+                                <h4>{{ user_item.display_name|default:user_item.username }}</h4>
+                                <span>@{{ user_item.username }}</span>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% elif search_query %}
+            <p class="empty-state">No se encontraron usuarios</p>
+        {% endif %}
+
+        {% if not search_query and following_users %}
+            <div class="recommended-section">
+                <h3>Usuarios que sigues</h3>
+                <div class="users-horizontal-scroll">
+                    {% for user_item in following_users %}
+                        <a href="{% url 'start_chat' user_id=user_item.id %}" class="user-horizontal-item">
+                            {% if user_item.profile_photo %}
+                                <img src="{{ user_item.profile_photo.url }}" alt="{{ user_item.username }}" class="user-horizontal-avatar">
+                            {% else %}
+                                <div class="user-horizontal-avatar-placeholder">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <span class="user-horizontal-name">{{ user_item.display_name|default:user_item.username }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        {% if chats %}
+            <div class="chats-section">
+                <h3>Conversaciones</h3>
+                <div class="chats">
+                    {% for chat in chats %}
+                        <a href="{% url 'chat' chat_id=chat.id %}" class="chat-item">
+                            {% if chat.other_user.profile_photo %}
+                                <img src="{{ chat.other_user.profile_photo.url }}" alt="{{ chat.other_user.username }}" class="chat-avatar">
+                            {% else %}
+                                <div class="chat-avatar-placeholder">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <div class="chat-info">
+                                <h4 class="chat-name">{{ chat.other_user.display_name|default:chat.other_user.username }}</h4>
+                                <span class="chat-username">@{{ chat.other_user.username }}</span>
+                                {% if chat.last_message %}
+                                    <p class="chat-preview">{{ chat.last_message.content|truncatewords:8 }}</p>
+                                {% else %}
+                                    <p class="chat-preview empty">Inicia la conversación</p>
+                                {% endif %}
+                            </div>
+                            <span class="chat-time">{{ chat.updated_at|timesince }} ago</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% elif not search_query %}
+            <p class="empty-state">No tienes conversaciones aún. Busca usuarios para enviarles mensajes.</p>
+        {% endif %}
+    </div>
+    
+    <!-- Chat placeholder for desktop -->
+    <div class="chat-placeholder">
+        <div class="chat-placeholder-content">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <h3>Selecciona un chat</h3>
+            <p>Elige una conversación de la lista o inicia una nueva</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

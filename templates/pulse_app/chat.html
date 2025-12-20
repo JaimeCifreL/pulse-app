@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat con @{{ other_user.username }} - Pulse{% endblock %}
+
+{% block page_title %}@{{ other_user.username }}{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-header">
+        <div class="chat-header-user">
+            <a href="{% url 'messages' %}" class="back-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </a>
+            {% if other_user.profile_photo %}
+                <img src="{{ other_user.profile_photo.url }}" alt="{{ other_user.username }}" class="chat-header-avatar">
+            {% else %}
+                <div class="chat-header-avatar-placeholder">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+            {% endif %}
+            <div class="chat-header-info">
+                <h2>{{ other_user.display_name|default:other_user.username }}</h2>
+                <span>@{{ other_user.username }}</span>
+            </div>
+        </div>
+        <a href="{% url 'profile' username=other_user.username %}" class="btn btn-secondary btn-sm">
+            Ver perfil
+        </a>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+        {% if chat_messages %}
+            {% for message in chat_messages reversed %}
+                <div class="message {% if message.sender == user %}sent{% else %}received{% endif %}">
+                    <div class="message-bubble">
+                        <p>{{ message.content }}</p>
+                        <span class="message-time">{{ message.created_at|date:"H:i" }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-chat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <p>No hay mensajes aún</p>
+                <small>Envía un mensaje para iniciar la conversación</small>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="chat-input-container">
+        <form method="post" class="chat-form" id="chat-form">
+            {% csrf_token %}
+            <textarea name="content" id="message-input" placeholder="Escribe un mensaje..." class="chat-input" rows="1"></textarea>
+            <button type="submit" class="send-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Auto-resize textarea
+    const textarea = document.getElementById('message-input');
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    // Scroll to bottom on load
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Submit on Enter (Shift+Enter for new line)
+    textarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.getElementById('chat-form').submit();
+        }
+    });
+
+    // Allow back navigation in chat
+    if (window.innerWidth <= 768) {
+        document.body.style.overscrollBehaviorX = 'auto';
+    }
+</script>
+{% endblock %}

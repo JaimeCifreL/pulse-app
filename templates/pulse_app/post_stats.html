@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Estadísticas del Post - Pulse{% endblock %}
+
+{% block page_title %}Estadísticas{% endblock %}
+
+{% block content %}
+<div class="stats-container">
+    <div class="stats-header">
+        <h1 class="page-main-title">Estadísticas del Post</h1>
+        <a href="{% url 'index' %}" class="btn btn-secondary">Volver</a>
+    </div>
+
+    <div class="post-preview">
+        <div class="post-card">
+            <div class="post-content">
+                {% if post.post_type == 'text' %}
+                    <p class="text-content">{{ post.text_content }}</p>
+                {% elif post.post_type == 'photo' and post.content_url %}
+                    <img src="{{ post.content_url.url }}" alt="Post content" class="media-preview">
+                {% elif post.post_type == 'poll' %}
+                    <h3>{{ post.poll.question }}</h3>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <h3>Tiempo de Vida</h3>
+                <p class="stat-value">{{ time_alive }}</p>
+                {% if time_remaining_seconds > 0 %}
+                    <small class="stat-detail">Quedan {{ time_remaining_seconds }} segundos</small>
+                {% else %}
+                    <small class="stat-detail">Post expirado</small>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon like">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <h3>Me gusta</h3>
+                <p class="stat-value">{{ post.likes_count }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon repost">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <path d="M3 11v-4a4 4 0 0 1 4-4h14"></path>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <path d="M21 13v4a4 4 0 0 1-4 4H3"></path>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <h3>Reposts</h3>
+                <p class="stat-value">{{ post.reposts_count }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon comment">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <h3>Comentarios</h3>
+                <p class="stat-value">{{ post.comments_count }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="user-lists">
+        <div class="user-list-section">
+            <h2>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                Les gustó a
+            </h2>
+            <div class="user-list">
+                {% if likes %}
+                    {% for like in likes %}
+                        <a href="{% url 'profile' username=like.user.username %}" class="user-item">
+                            {% if like.user.profile_photo %}
+                                <img src="{{ like.user.profile_photo.url }}" alt="{{ like.user.username }}" class="user-avatar">
+                            {% else %}
+                                <div class="user-avatar-placeholder">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <div class="user-info">
+                                <span class="user-display-name">{{ like.user.display_name|default:like.user.username }}</span>
+                                <span class="user-username">@{{ like.user.username }}</span>
+                            </div>
+                        </a>
+                    {% endfor %}
+                {% else %}
+                    <p class="empty-state">Nadie le ha dado like aún</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="user-list-section">
+            <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <path d="M3 11v-4a4 4 0 0 1 4-4h14"></path>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <path d="M21 13v4a4 4 0 0 1-4 4H3"></path>
+                </svg>
+                Reposteado por
+            </h2>
+            <div class="user-list">
+                {% if reposts %}
+                    {% for repost in reposts %}
+                        <a href="{% url 'profile' username=repost.user.username %}" class="user-item">
+                            {% if repost.user.profile_photo %}
+                                <img src="{{ repost.user.profile_photo.url }}" alt="{{ repost.user.username }}" class="user-avatar">
+                            {% else %}
+                                <div class="user-avatar-placeholder">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <div class="user-info">
+                                <span class="user-display-name">{{ repost.user.display_name|default:repost.user.username }}</span>
+                                <span class="user-username">@{{ repost.user.username }}</span>
+                            </div>
+                        </a>
+                    {% endfor %}
+                {% else %}
+                    <p class="empty-state">Nadie ha reposteado aún</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Allow back navigation in post stats
+if (window.innerWidth <= 768) {
+    document.body.style.overscrollBehaviorX = 'auto';
+}
+</script>
+{% endblock %}

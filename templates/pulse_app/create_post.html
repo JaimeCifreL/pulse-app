@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear publicación - Pulse{% endblock %}
+
+{% block page_title %}Crear{% endblock %}
+
+{% block content %}
+<div class="create-post-container">
+    <h1 class="page-main-title">Crear nueva publicación</h1>
+
+    <div class="post-type-selector" id="post-type-selector">
+        <button type="button" class="type-btn active" data-type="text" data-index="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> <span class="type-text">Texto</span></button>
+        <button type="button" class="type-btn" data-type="photo" data-index="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> <span class="type-text">Foto</span></button>
+        <button type="button" class="type-btn" data-type="video" data-index="2"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg> <span class="type-text">Video</span></button>
+        <button type="button" class="type-btn" data-type="poll" data-index="3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="19" x2="19" y2="19"></line><line x1="5" y1="14" x2="7" y2="14"></line><line x1="12" y1="10" x2="14" y2="10"></line><line x1="17" y1="7" x2="19" y2="7"></line></svg> <span class="type-text">Encuesta</span></button>
+    </div>
+
+    <div class="swipe-indicator">
+        <span class="swipe-hint">← Desliza para cambiar →</span>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="create-post-form" id="create-post-form">
+        {% csrf_token %}
+
+        <input type="hidden" id="post_type" name="post_type" value="text">
+
+        <!-- Contenido de texto -->
+        <div class="form-section active" id="text-section">
+            <textarea id="text_content" name="text_content" placeholder="¿Qué está pasando?" 
+                      class="form-textarea" maxlength="2000"></textarea>
+            <small id="char-count">0 / 2000 caracteres</small>
+        </div>
+
+        <!-- Foto o video -->
+        <div class="form-section" id="media-section">
+            <div class="file-input-wrapper">
+                <input type="file" id="content_file" name="content_file" 
+                       accept="image/*, video/*" class="file-input">
+                <label for="content_file" class="file-label">Selecciona archivo</label>
+            </div>
+            <div id="preview" class="preview"></div>
+        </div>
+
+        <!-- Encuesta -->
+        <div class="form-section" id="poll-section">
+            <div class="form-group">
+                <label for="poll_question">Pregunta</label>
+                <input type="text" id="poll_question" name="poll_question" class="form-input" placeholder="¿Tu pregunta?">
+            </div>
+            <div id="poll-options">
+                <div class="poll-option-input">
+                    <input type="text" name="poll_options[]" class="form-input" placeholder="Opción 1">
+                </div>
+                <div class="poll-option-input">
+                    <input type="text" name="poll_options[]" class="form-input" placeholder="Opción 2">
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addPollOption()">
+                + Añadir opción
+            </button>
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'index' %}" class="btn btn-cancel" aria-label="Cancelar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <span class="cancel-text">Cancelar</span>
+            </a>
+            <button type="submit" class="btn btn-primary btn-publish">Publicar ➤</button>
+        </div>
+    </form>
+</div>
+
+{% load static %}
+<script src="{% static 'js/swipe.js' %}"></script>
+<script>
+    let currentTypeIndex = 0;
+    const types = ['text', 'photo', 'video', 'poll'];
+    const typeButtons = document.querySelectorAll('.type-btn');
+    
+    // Initialize post type swiper
+    const postTypeSwiper = new TabSwiper('#create-post-form', '.type-btn', '.form-section');
+    
+    // Sync tab changes with form
+    postTypeSwiper.onSwitch = function(index) {
+        currentTypeIndex = index;
+        const type = types[index];
+        document.getElementById('post_type').value = type;
+        
+        // Update sections
+        document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+        
+        if (type === 'text') {
+            document.getElementById('text-section').classList.add('active');
+        } else if (type === 'photo' || type === 'video') {
+            document.getElementById('media-section').classList.add('active');
+        } else if (type === 'poll') {
+            document.getElementById('poll-section').classList.add('active');
+        }
+    };
+    
+    // Handle button clicks
+    typeButtons.forEach((btn, index) => {
+        btn.addEventListener('click', function() {
+            typeButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const type = this.dataset.type;
+            currentTypeIndex = index;
+            document.getElementById('post_type').value = type;
+            
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            
+            if (type === 'text') {
+                document.getElementById('text-section').classList.add('active');
+            } else if (type === 'photo' || type === 'video') {
+                document.getElementById('media-section').classList.add('active');
+            } else if (type === 'poll') {
+                document.getElementById('poll-section').classList.add('active');
+            }
+        });
+    });
+
+    // Contar caracteres
+    document.getElementById('text_content').addEventListener('input', function() {
+        document.getElementById('char-count').textContent = this.value.length + ' / 2000 caracteres';
+    });
+</script>
+{% endblock %}

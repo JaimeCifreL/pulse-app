@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notificaciones - Pulse{% endblock %}
+
+{% block extra_css %}
+<style>
+.notification-filters {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
+    overflow-x: auto;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.filter-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.filter-btn:hover {
+    background-color: var(--primary-color-light);
+}
+
+.notification-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+    text-decoration: none;
+    color: var(--text-color);
+}
+
+.notification-item:hover {
+    background-color: var(--hover-color);
+}
+
+.notification-item.unread {
+    background-color: var(--primary-color-light, rgba(59, 130, 246, 0.1));
+}
+
+.notification-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-text {
+    margin-bottom: 0.25rem;
+}
+
+.notification-username {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.notification-time {
+    font-size: 0.875rem;
+    color: var(--secondary-text);
+}
+
+.notification-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.bulk-actions {
+    padding: 1rem;
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mark-all-read-btn {
+    padding: 0.5rem 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.mark-all-read-btn:hover {
+    background-color: var(--primary-color-dark, #1d4ed8);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--secondary-text);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Notificaciones</h1>
+    
+    <div class="bulk-actions">
+        <form method="post" action="{% url 'mark_all_notifications_read' %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="mark-all-read-btn">Marcar todas como leídas</button>
+        </form>
+    </div>
+    
+    <div class="notification-filters">
+        <a href="?filter=all" class="filter-btn {% if filter == 'all' %}active{% endif %}">Todas</a>
+        <a href="?filter=mentions" class="filter-btn {% if filter == 'mentions' %}active{% endif %}">Menciones</a>
+        <a href="?filter=likes" class="filter-btn {% if filter == 'likes' %}active{% endif %}">Me gusta</a>
+        <a href="?filter=follows" class="filter-btn {% if filter == 'follows' %}active{% endif %}">Seguidores</a>
+        <a href="?filter=unread" class="filter-btn {% if filter == 'unread' %}active{% endif %}">No leídas</a>
+    </div>
+    
+    <div class="notifications-list">
+        {% if page_obj %}
+            {% for notification in page_obj %}
+                <a href="#" class="notification-item {% if not notification.is_read %}unread{% endif %}" 
+                   data-notification-id="{{ notification.id }}">
+                    {% if notification.actor.profile_photo %}
+                        <img src="{{ notification.actor.profile_photo.url }}" alt="{{ notification.actor.username }}" class="notification-avatar">
+                    {% else %}
+                        <img src="{% static 'images/default-avatar.png' %}" alt="{{ notification.actor.username }}" class="notification-avatar">
+                    {% endif %}
+                    
+                    <div class="notification-content">
+                        <div class="notification-text">
+                            <span class="notification-username">@{{ notification.actor.username }}</span>
+                            {% if notification.notification_type == 'like' %}
+                                le dio me gusta a tu post
+                            {% elif notification.notification_type == 'comment' %}
+                                comentó tu post
+                            {% elif notification.notification_type == 'follow' %}
+                                te ha seguido
+                            {% elif notification.notification_type == 'mention' %}
+                                te mencionó
+                            {% elif notification.notification_type == 'repost' %}
+                                compartió tu post
+                            {% endif %}
+                        </div>
+                        <div class="notification-time">{{ notification.created_at|timesince }} ago</div>
+                    </div>
+                </a>
+            {% endfor %}
+            
+            <!-- Paginación -->
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?filter={{ filter }}&page=1">Primera</a>
+                    <a href="?filter={{ filter }}&page={{ page_obj.previous_page_number }}">« Anterior</a>
+                {% endif %}
+
+                <span class="page-info">
+                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?filter={{ filter }}&page={{ page_obj.next_page_number }}">Siguiente »</a>
+                    <a href="?filter={{ filter }}&page={{ page_obj.paginator.num_pages }}">Última</a>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No tienes notificaciones</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Marcar notificación como leída al hacer clic
+document.querySelectorAll('.notification-item').forEach(item => {
+    item.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const notificationId = item.dataset.notificationId;
+        
+        try {
+            const response = await fetch(`/notifications/${notificationId}/read/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                item.classList.remove('unread');
+            }
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+        }
+    });
+});
+</script>
+{% endblock %}

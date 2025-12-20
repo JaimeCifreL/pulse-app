@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Menciones - Pulse{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Tus Menciones</h1>
+    
+    <div class="posts-grid">
+        {% if page_obj %}
+            {% for mention in page_obj %}
+                <div class="post-card">
+                    <div class="post-header">
+                        <a href="{% url 'profile' mention.mentioned_by.username %}" class="user-info">
+                            {% if mention.mentioned_by.profile_photo %}
+                                <img src="{{ mention.mentioned_by.profile_photo.url }}" alt="{{ mention.mentioned_by.username }}" class="avatar">
+                            {% else %}
+                                <img src="{% static 'images/default-avatar.png' %}" alt="{{ mention.mentioned_by.username }}" class="avatar">
+                            {% endif %}
+                            <div>
+                                <div class="display-name">{{ mention.mentioned_by.display_name|default:mention.mentioned_by.username }}</div>
+                                <div class="username">@{{ mention.mentioned_by.username }}</div>
+                            </div>
+                        </a>
+                        <div class="post-time">{{ mention.created_at|timesince }} ago</div>
+                    </div>
+                    
+                    {% if mention.post %}
+                        <div class="post-content">
+                            <a href="{% url 'post_detail' mention.post.id %}" class="post-link">
+                                <p>{{ mention.post.text_content }}</p>
+                            </a>
+                        </div>
+                    {% elif mention.comment %}
+                        <div class="post-content">
+                            <p>Comentario: {{ mention.comment.text }}</p>
+                            <a href="{% url 'post_detail' mention.comment.post.id %}" class="view-post-link">Ver post original</a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <!-- Paginación -->
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">Primera</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">« Anterior</a>
+                {% endif %}
+
+                <span class="page-info">
+                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">Siguiente »</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No tienes menciones todavía</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

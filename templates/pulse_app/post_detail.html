@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.id|truncatewords:1 }} - Pulse{% endblock %}
+
+{% block page_title %}Post{% endblock %}
+
+{% block content %}
+<div class="post-detail-container">
+    <div class="post-detail" data-post-id="{{ post.id }}">
+        <div class="post-header">
+            {% if post.author.profile_photo %}
+                <img src="{{ post.author.profile_photo.url }}" alt="Avatar" class="avatar">
+            {% else %}
+                <div class="avatar-placeholder">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+            {% endif %}
+            <div class="post-header-info">
+                <a href="{% url 'profile' username=post.author.username %}" class="username">
+                    @{{ post.author.username }}
+                </a>
+                <span class="time-remaining"
+                      data-time-remaining="{{ post.time_remaining_seconds }}"
+                      data-loaded-at="{{ now_timestamp }}">
+                    {% if post.is_expired %}
+                        <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                        </svg> Expirado
+                    {% else %}
+                        <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg> {{ post.time_remaining_seconds }}s restantes
+                    {% endif %}
+                </span>
+                <small>{{ post.created_at }}</small>
+            </div>
+            {% if post.author == user %}
+                <div class="post-menu-container">
+                    <button class="post-menu-btn" onclick="togglePostMenu('{{ post.id }}')">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="5" r="2"></circle>
+                            <circle cx="12" cy="12" r="2"></circle>
+                            <circle cx="12" cy="19" r="2"></circle>
+                        </svg>
+                    </button>
+                    <div class="post-menu-dropdown" id="menu-{{ post.id }}" style="display: none;">
+                        <a href="{% url 'post_stats' post_id=post.id %}" class="menu-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="20" x2="12" y2="10"></line>
+                                <line x1="18" y1="20" x2="18" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="16"></line>
+                            </svg>
+                            Ver estadísticas
+                        </a>
+                        <button class="menu-item" onclick="togglePinPost('{{ post.id }}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 17v5"></path>
+                                <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"></path>
+                            </svg>
+                            {% if post.is_pinned %}Desfijar{% else %}Fijar en perfil{% endif %}
+                        </button>
+                        <button class="menu-item" onclick="toggleComments('{{ post.id }}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                {% if post.comments_disabled %}
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                                {% endif %}
+                            </svg>
+                            {% if post.comments_disabled %}Activar comentarios{% else %}Desactivar comentarios{% endif %}
+                        </button>
+                        <button class="menu-item delete" onclick="deletePost('{{ post.id }}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Eliminar post
+                        </button>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="post-content">
+            {% if post.post_type == 'photo' or post.post_type == 'video' %}
+                {% if post.content_url %}
+                    <div class="media-container-large">
+                        {% if post.post_type == 'photo' %}
+                            <img src="{{ post.content_url.url }}" alt="Post content">
+                        {% else %}
+                            <video controls>
+                                <source src="{{ post.content_url.url }}" type="video/mp4">
+                            </video>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% elif post.post_type == 'text' %}
+                <p class="text-content">{{ post.text_content }}</p>
+            {% elif post.post_type == 'poll' %}
+                <div class="poll-container">
+                    <h3>{{ post.poll.question }}</h3>
+                    <div class="poll-options">
+                        {% for option in post.poll.options.all %}
+                            <div class="poll-option">
+                                <span>{{ option.text }}</span>
+                                <span class="votes">({{ option.votes }})</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="post-stats post-stats-desktop">
+            <span><svg class="like-icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> <span data-likes-count="{{ post.likes_count }}">{{ post.likes_count }}</span> likes</span>
+            <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> {{ post.comments_count }} comentarios</span>
+            <span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <path d="M3 11v-4a4 4 0 0 1 4-4h14"></path>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <path d="M21 13v4a4 4 0 0 1-4 4H3"></path>
+                </svg>
+                {{ post.reposts_count }} reposts
+            </span>
+        </div>
+
+        <div class="post-actions">
+            <form action="{% url 'like_post' post_id=post.id %}" method="post" class="like-form">
+                {% csrf_token %}
+                <button type="submit" class="action-btn-large {% if is_liked %}liked{% endif %}">
+                    {% if is_liked %}<svg class="like-icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>{% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>{% endif %}
+                    <span class="btn-text">Me gusta</span>
+                    <span class="btn-count" data-likes-count="{{ post.likes_count }}">{{ post.likes_count }}</span>
+                </button>
+            </form>
+            <button class="action-btn-large" id="toggle-comment-form">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span class="btn-text">Comentar</span>
+                <span class="btn-count">{{ post.comments_count }}</span>
+            </button>
+            <button class="action-btn-large" onclick="repostPost('{{ post.id }}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <path d="M3 11v-4a4 4 0 0 1 4-4h14"></path>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <path d="M21 13v4a4 4 0 0 1-4 4H3"></path>
+                </svg>
+                <span class="btn-text">Repostear</span>
+                <span class="btn-count">{{ post.reposts_count }}</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="comments-section">
+        <h3>Comentarios</h3>
+        
+        {% if user.is_authenticated %}
+            <form method="post" action="{% url 'comment_post' post_id=post.id %}" class="comment-form" id="comment-form" style="display: none;">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea name="text" placeholder="Escribe un comentario..." required class="form-textarea" maxlength="1000"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Comentar</button>
+            </form>
+        {% endif %}
+
+        <div class="comments-list">
+            {% for comment in comments %}
+                <div class="comment">
+                    {% if comment.user.profile_photo %}
+                        <img src="{{ comment.user.profile_photo.url }}" alt="Avatar" class="avatar-sm">
+                    {% else %}
+                        <div class="avatar-placeholder-sm">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                    {% endif %}
+                    <div class="comment-content">
+                        <a href="{% url 'profile' username=comment.user.username %}" class="username-sm">
+                            @{{ comment.user.username }}
+                        </a>
+                        <p>{{ comment.text }}</p>
+                        <small>{{ comment.created_at }}</small>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="empty-state">No hay comentarios aún</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Toggle comment form visibility
+document.getElementById('toggle-comment-form')?.addEventListener('click', function() {
+    const commentForm = document.getElementById('comment-form');
+    if (commentForm) {
+        if (commentForm.style.display === 'none') {
+            commentForm.style.display = 'block';
+            commentForm.querySelector('textarea')?.focus();
+        } else {
+            commentForm.style.display = 'none';
+        }
+    }
+});
+
+// Allow back navigation in post detail
+if (window.innerWidth <= 768) {
+    document.body.style.overscrollBehaviorX = 'auto';
+}
+</script>
+{% endblock %}

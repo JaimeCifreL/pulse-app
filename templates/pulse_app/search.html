@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Buscar - Pulse{% endblock %}
+
+{% block page_title %}Buscar{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <h1 class="page-main-title">Resultados para "{{ query }}"</h1>
+
+    <div class="search-tabs">
+        <h2>Usuarios</h2>
+        {% if users %}
+            <div class="users-grid">
+                {% for user_item in users %}
+                    <a href="{% url 'profile' username=user_item.username %}" class="user-card">
+                        {% if user_item.profile_photo %}
+                            <img src="{{ user_item.profile_photo.url }}" alt="Avatar" class="user-avatar">
+                        {% else %}
+                            <div class="avatar-placeholder user-avatar">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                        {% endif %}
+                        <div class="user-info">
+                            <h3>{{ user_item.username }}</h3>
+                            <p>{{ user_item.followers.count }} seguidores</p>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No se encontraron usuarios</p>
+        {% endif %}
+    </div>
+
+    <div class="search-tabs">
+        <h2>Publicaciones</h2>
+        {% if posts %}
+            <div class="posts-list">
+                {% for post in posts %}
+                    <div class="post-card">
+                        <div class="post-header">
+                            {% if post.author.profile_photo %}
+                                <img src="{{ post.author.profile_photo.url }}" alt="Avatar" class="avatar">
+                            {% else %}
+                                <div class="avatar-placeholder">👤</div>
+                            {% endif %}
+                            <div class="post-header-info">
+                                <a href="{% url 'profile' username=post.author.username %}" class="username">
+                                    @{{ post.author.username }}
+                                </a>
+                            </div>
+                            {% if post.author == user %}
+                                <div class="post-menu-container">
+                                    <button class="post-menu-btn" onclick="togglePostMenu('{{ post.id }}')">
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="12" cy="5" r="2"></circle>
+                                            <circle cx="12" cy="12" r="2"></circle>
+                                            <circle cx="12" cy="19" r="2"></circle>
+                                        </svg>
+                                    </button>
+                                    <div class="post-menu-dropdown" id="menu-{{ post.id }}" style="display: none;">
+                                        <a href="{% url 'post_stats' post_id=post.id %}" class="menu-item">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="12" y1="20" x2="12" y2="10"></line>
+                                                <line x1="18" y1="20" x2="18" y2="4"></line>
+                                                <line x1="6" y1="20" x2="6" y2="16"></line>
+                                            </svg>
+                                            Ver estadísticas
+                                        </a>
+                                        <button class="menu-item" onclick="togglePinPost('{{ post.id }}')">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 17v5"></path>
+                                                <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"></path>
+                                            </svg>
+                                            {% if post.is_pinned %}Desfijar{% else %}Fijar en perfil{% endif %}
+                                        </button>
+                                        <button class="menu-item" onclick="toggleComments('{{ post.id }}')">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                                {% if post.comments_disabled %}
+                                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                                                {% endif %}
+                                            </svg>
+                                            {% if post.comments_disabled %}Activar comentarios{% else %}Desactivar comentarios{% endif %}
+                                        </button>
+                                        <button class="menu-item delete" onclick="deletePost('{{ post.id }}')">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            </svg>
+                                            Eliminar post
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="post-content">
+                            <p>{{ post.text_content|truncatewords:15 }}</p>
+                        </div>
+                        <a href="{% url 'post_detail' post_id=post.id %}" class="btn btn-primary btn-sm">
+                            Ver publicación
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No se encontraron publicaciones</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

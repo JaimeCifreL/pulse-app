@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configuración de Notificaciones - Pulse{% endblock %}
+
+{% block extra_css %}
+<style>
+.settings-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.settings-form {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 2rem;
+}
+
+.settings-group {
+    margin-bottom: 1.5rem;
+}
+
+.settings-group h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.setting-label {
+    flex: 1;
+}
+
+.setting-label h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.setting-label p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--secondary-text);
+}
+
+.toggle-switch {
+    position: relative;
+    width: 52px;
+    height: 28px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-color);
+    transition: 0.3s;
+    border-radius: 28px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--primary-color);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+.number-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.number-input input {
+    width: 80px;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--surface-color);
+    color: var(--text-color);
+}
+
+.save-button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.save-button:hover {
+    background-color: var(--primary-color-dark, #1d4ed8);
+}
+
+.success-message {
+    background-color: #10b981;
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <h1>Configuración de Notificaciones</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="success-message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="post" class="settings-form">
+        {% csrf_token %}
+        
+        <div class="settings-group">
+            <h3>Notificaciones de Interacción</h3>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>Me gusta</h4>
+                    <p>Recibe notificaciones cuando alguien da me gusta a tus posts</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_likes" {% if settings.notify_likes %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>Comentarios</h4>
+                    <p>Recibe notificaciones cuando alguien comenta tus posts</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_comments" {% if settings.notify_comments %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>Menciones</h4>
+                    <p>Recibe notificaciones cuando alguien te menciona</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_mentions" {% if settings.notify_mentions %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>Compartidos</h4>
+                    <p>Recibe notificaciones cuando alguien comparte tus posts</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_reposts" {% if settings.notify_reposts %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="settings-group">
+            <h3>Notificaciones Sociales</h3>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>Nuevos seguidores</h4>
+                    <p>Recibe notificaciones cuando alguien te sigue</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_follows" {% if settings.notify_follows %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>Mensajes directos</h4>
+                    <p>Recibe notificaciones cuando recibes mensajes nuevos</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_messages" {% if settings.notify_messages %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="settings-group">
+            <h3>Recordatorios</h3>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>Posts a punto de expirar</h4>
+                    <p>Recibe notificaciones antes de que expiren tus posts</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_post_expiring" {% if settings.notify_post_expiring %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>Tiempo de aviso (minutos)</h4>
+                    <p>Cuántos minutos antes de expirar quieres recibir el aviso</p>
+                </div>
+                <div class="number-input">
+                    <input type="number" name="expiring_threshold" value="{{ settings.expiring_threshold }}" min="1" max="1440">
+                    <span>minutos</span>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>Recordatorios de amigos</h4>
+                    <p>Recibe recordatorios para interactuar con amigos inactivos</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="notify_friend_reminder" {% if settings.notify_friend_reminder %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <button type="submit" class="save-button">Guardar Configuración</button>
+    </form>
+</div>
+{% endblock %}

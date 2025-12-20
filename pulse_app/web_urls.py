@@ -1,0 +1,42 @@
+from django.urls import path
+from .web_views import (
+    index, register_view, login_view, logout_view, create_post_view,
+    post_detail_view, like_post, comment_post, repost_post, vote_poll, 
+    profile_view, edit_profile_view, follow_user,
+    unfollow_user, messages_view, chat_view, start_chat, search_view, trending_view,
+    delete_post, toggle_pin_post, toggle_comments, post_stats_view,
+    notifications_view, mark_notification_read, mark_all_notifications_read,
+    mentions_timeline, hashtag_view, notification_settings_view
+)
+
+urlpatterns = [
+    path('', index, name='index'),
+    path('register/', register_view, name='register'),
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+    path('create-post/', create_post_view, name='create_post'),
+    path('post/<uuid:post_id>/', post_detail_view, name='post_detail'),
+    path('post/<uuid:post_id>/like/', like_post, name='like_post'),
+    path('post/<uuid:post_id>/comment/', comment_post, name='comment_post'),
+    path('post/<uuid:post_id>/repost/', repost_post, name='repost_post'),
+    path('post/<uuid:post_id>/poll/vote/<uuid:option_id>/', vote_poll, name='vote_poll'),
+    path('post/<uuid:post_id>/delete/', delete_post, name='delete_post'),
+    path('post/<uuid:post_id>/pin/', toggle_pin_post, name='toggle_pin_post'),
+    path('post/<uuid:post_id>/toggle-comments/', toggle_comments, name='toggle_comments'),
+    path('post/<uuid:post_id>/stats/', post_stats_view, name='post_stats'),
+    path('profile/<str:username>/', profile_view, name='profile'),
+    path('settings/profile/', edit_profile_view, name='edit_profile'),
+    path('settings/notifications/', notification_settings_view, name='notification_settings'),
+    path('follow/<uuid:user_id>/', follow_user, name='follow_user'),
+    path('unfollow/<uuid:user_id>/', unfollow_user, name='unfollow_user'),
+    path('messages/', messages_view, name='messages'),
+    path('chat/<uuid:chat_id>/', chat_view, name='chat'),
+    path('chat/start/<uuid:user_id>/', start_chat, name='start_chat'),
+    path('search/', search_view, name='search'),
+    path('trending/', trending_view, name='trending'),
+    path('notifications/', notifications_view, name='notifications'),
+    path('notifications/<uuid:notification_id>/read/', mark_notification_read, name='mark_notification_read'),
+    path('notifications/mark-all-read/', mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('mentions/', mentions_timeline, name='mentions'),
+    path('hashtag/<str:hashtag_name>/', hashtag_view, name='hashtag'),
+]

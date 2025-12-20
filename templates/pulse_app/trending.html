@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Trending - Pulse{% endblock %}
+
+{% block page_title %}<svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;"><path d="M12 2C10 5 6 8 6 13c0 4.418 3.582 8 8 8s8-3.582 8-8c0-3-2-6-4-8 0 3-1 4-3 6 0-3-2-5-3-9z"></path></svg> Trending{% endblock %}
+
+{% block content %}
+<div class="trending-container">
+    <h1 class="page-main-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C10 5 6 8 6 13c0 4.418 3.582 8 8 8s8-3.582 8-8c0-3-2-6-4-8 0 3-1 4-3 6 0-3-2-5-3-9z"></path><polyline points="13 2 13 9 20 9"></polyline><polyline points="9 16 11 14 15 18 19 14"></polyline></svg> Trending</h1>
+
+    <div class="filter-tabs trending-tabs">
+        <button class="filter-tab active">Todos</button>
+        <button class="filter-tab">Fotos</button>
+        <button class="filter-tab">Videos</button>
+        <button class="filter-tab">Encuestas</button>
+    </div>
+
+    {% if posts %}
+        <div class="posts-list">
+            {% for post in posts %}
+                <div class="post-card" data-post-id="{{ post.id }}">
+                <div class="post-badge">
+                    <span><svg class="like-icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> <span data-likes-count="{{ post.likes_count }}">{{ post.likes_count }}</span> likes</span>
+                    <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> {{ post.total_life_seconds_reached }}s</span>
+                </div>                    <div class="post-header">
+                        {% if post.author.profile_photo %}
+                            <img src="{{ post.author.profile_photo.url }}" alt="Avatar" class="avatar">
+                        {% else %}
+                            <div class="avatar-placeholder">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                        {% endif %}
+                        <div class="post-header-info">
+                            <a href="{% url 'profile' username=post.author.username %}" class="username">
+                                @{{ post.author.username }}
+                            </a>
+                            <span class="time-remaining"
+                                  data-time-remaining="{{ post.time_remaining_seconds }}"
+                                  data-loaded-at="{{ now_timestamp }}">
+                                {% if post.time_remaining_seconds|default:0 <= 0 %}
+                                    Expirado
+                                {% else %}
+                                    <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg> {{ post.time_remaining_seconds }}s
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if post.author == user %}
+                            <div class="post-menu-container">
+                                <button class="post-menu-btn" onclick="togglePostMenu('{{ post.id }}')">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <circle cx="12" cy="5" r="2"></circle>
+                                        <circle cx="12" cy="12" r="2"></circle>
+                                        <circle cx="12" cy="19" r="2"></circle>
+                                    </svg>
+                                </button>
+                                <div class="post-menu-dropdown" id="menu-{{ post.id }}" style="display: none;">
+                                    <a href="{% url 'post_stats' post_id=post.id %}" class="menu-item">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="12" y1="20" x2="12" y2="10"></line>
+                                            <line x1="18" y1="20" x2="18" y2="4"></line>
+                                            <line x1="6" y1="20" x2="6" y2="16"></line>
+                                        </svg>
+                                        Ver estadísticas
+                                    </a>
+                                    <button class="menu-item" onclick="togglePinPost('{{ post.id }}')">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 17v5"></path>
+                                            <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"></path>
+                                        </svg>
+                                        {% if post.is_pinned %}Desfijar{% else %}Fijar en perfil{% endif %}
+                                    </button>
+                                    <button class="menu-item" onclick="toggleComments('{{ post.id }}')">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                            {% if post.comments_disabled %}
+                                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                                            {% endif %}
+                                        </svg>
+                                        {% if post.comments_disabled %}Activar comentarios{% else %}Desactivar comentarios{% endif %}
+                                    </button>
+                                    <button class="menu-item delete" onclick="deletePost('{{ post.id }}')">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                        Eliminar post
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="post-content">
+                        {% if post.post_type == 'photo' or post.post_type == 'video' %}
+                            {% if post.content_url %}
+                                <div class="media-container">
+                                    {% if post.post_type == 'photo' %}
+                                        <img src="{{ post.content_url.url }}" alt="Post content">
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% elif post.post_type == 'text' %}
+                            <p>{{ post.text_content|truncatewords:20 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="post-footer">
+                        <a href="{% url 'post_detail' post_id=post.id %}" class="btn btn-primary btn-sm">
+                            Ver completo
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">No hay posts trending</p>
+    {% endif %}
+</div>
+
+{% load static %}
+<script src="{% static 'js/swipe.js' %}"></script>
+<script>
+    // Initialize trending tabs swiper
+    const trendingSwiper = new TabSwiper('.trending-container', '.filter-tab', null);
+    
+    // Handle filter change
+    trendingSwiper.onSwitch = function(index) {
+        const filterTypes = ['all', 'photo', 'video', 'poll'];
+        const filterType = filterTypes[index];
+        
+        // Filter posts
+        document.querySelectorAll('.post-card').forEach(post => {
+            if (filterType === 'all') {
+                post.style.display = '';
+            } else {
+                const postType = post.querySelector('[data-post-type]')?.dataset.postType || '';
+                post.style.display = postType === filterType ? '' : 'none';
+            }
+        });
+    };
+    
+    // Add click handlers for existing filter tabs
+    document.querySelectorAll('.filter-tab').forEach((tab, index) => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            trendingSwiper.switchTab(index);
+        });
+    });
+</script>
+{% endblock %}

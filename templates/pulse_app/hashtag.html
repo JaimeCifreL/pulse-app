@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}#{{ hashtag_name }} - Pulse{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="hashtag-header">
+        <h1>#{{ hashtag_name }}</h1>
+        {% if hashtag %}
+            <p class="hashtag-stats">{{ hashtag.usage_count }} publicaciones</p>
+        {% endif %}
+    </div>
+    
+    <div class="posts-grid">
+        {% if page_obj %}
+            {% for post in page_obj %}
+                <div class="post-card" data-post-id="{{ post.id }}">
+                    <div class="post-header">
+                        <a href="{% url 'profile' post.author.username %}" class="user-info">
+                            {% if post.author.profile_photo %}
+                                <img src="{{ post.author.profile_photo.url }}" alt="{{ post.author.username }}" class="avatar">
+                            {% else %}
+                                <img src="{% static 'images/default-avatar.png' %}" alt="{{ post.author.username }}" class="avatar">
+                            {% endif %}
+                            <div>
+                                <div class="display-name">{{ post.author.display_name|default:post.author.username }}</div>
+                                <div class="username">@{{ post.author.username }}</div>
+                            </div>
+                        </a>
+                        <div class="post-time">{{ post.created_at|timesince }} ago</div>
+                    </div>
+                    
+                    <div class="post-content">
+                        <a href="{% url 'post_detail' post.id %}" class="post-link">
+                            {% if post.text_content %}
+                                <p>{{ post.text_content }}</p>
+                            {% endif %}
+                            
+                            {% if post.media_file %}
+                                {% if post.post_type == 'image' %}
+                                    <img src="{{ post.media_file.url }}" alt="Post image" class="post-media">
+                                {% elif post.post_type == 'video' %}
+                                    <video src="{{ post.media_file.url }}" controls class="post-media"></video>
+                                {% endif %}
+                            {% endif %}
+                        </a>
+                    </div>
+                    
+                    <div class="post-actions">
+                        <button class="action-btn like-btn {% if post.is_liked %}liked{% endif %}" onclick="likePost('{{ post.id }}')">
+                            <svg viewBox="0 0 24 24" fill="{% if post.is_liked %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                            <span class="like-count">{{ post.likes_count }}</span>
+                        </button>
+                        <button class="action-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span>{{ post.comments_count }}</span>
+                        </button>
+                        <button class="action-btn repost-btn {% if post.is_reposted %}reposted{% endif %}" onclick="repostPost('{{ post.id }}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="17 1 21 5 17 9"></polyline>
+                                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                                <polyline points="7 23 3 19 7 15"></polyline>
+                                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                            </svg>
+                            <span>{{ post.reposts_count }}</span>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <!-- Paginación -->
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">Primera</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">« Anterior</a>
+                {% endif %}
+
+                <span class="page-info">
+                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">Siguiente »</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No hay posts con este hashtag</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

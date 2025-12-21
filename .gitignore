@@ -1,12 +1,14 @@
-# Python
+.DS_Store
+*.pyc
 __pycache__/
+*.sqlite3
+db.sqlite3
+*.log
+*.pot
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
 build/
 develop-eggs/
 dist/
@@ -22,36 +24,14 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
-# Django
-*.log
-db.sqlite3
-db.sqlite3-journal
-media/
+venv/
+ENV/
+env/
+.venv
 staticfiles/
-/static/
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# Environment
+media/
 .env
 .env.local
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Redis
+celerybeat-schedule*
 dump.rdb
-
-# Local Redis installation
-C:/redis/
+node_modules/

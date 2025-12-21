@@ -36,9 +36,18 @@
             <div class="file-input-wrapper">
                 <input type="file" id="content_file" name="content_file" 
                        accept="image/*, video/*" class="file-input">
-                <label for="content_file" class="file-label">Selecciona archivo</label>
+                <label for="content_file" class="file-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin-bottom: 10px;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span class="file-label-text">Toca para seleccionar archivo</span>
+                </label>
             </div>
             <div id="preview" class="preview"></div>
+            <textarea id="media_text_content" name="text_content" placeholder="Añade una descripción... (opcional)" 
+                      class="form-textarea" maxlength="2000" style="margin-top: 15px;"></textarea>
         </div>
 
         <!-- Encuesta -->
@@ -76,6 +85,16 @@
 {% load static %}
 <script src="{% static 'js/swipe.js' %}"></script>
 <script>
+    // Función para añadir opciones de encuesta
+    function addPollOption() {
+        const pollOptions = document.getElementById('poll-options');
+        const optionCount = pollOptions.children.length + 1;
+        const newOption = document.createElement('div');
+        newOption.className = 'poll-option-input';
+        newOption.innerHTML = `<input type="text" name="poll_options[]" class="form-input" placeholder="Opción ${optionCount}">`;
+        pollOptions.appendChild(newOption);
+    }
+
     let currentTypeIndex = 0;
     const types = ['text', 'photo', 'video', 'poll'];
     const typeButtons = document.querySelectorAll('.type-btn');
@@ -127,5 +146,114 @@
     document.getElementById('text_content').addEventListener('input', function() {
         document.getElementById('char-count').textContent = this.value.length + ' / 2000 caracteres';
     });
+
+    // Manejo de archivos
+    const fileInput = document.getElementById('content_file');
+    const preview = document.getElementById('preview');
+    const fileLabel = document.querySelector('.file-label-text');
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) {
+            preview.innerHTML = '';
+            fileLabel.textContent = 'Toca para seleccionar archivo';
+            return;
+        }
+
+        // Validar tipo de archivo
+        const currentType = document.getElementById('post_type').value;
+        const isImage = file.type.startsWith('image/');
+        const isVideo = file.type.startsWith('video/');
+
+        if (currentType === 'photo' && !isImage) {
+            alert('Por favor selecciona una imagen');
+            fileInput.value = '';
+            return;
+        }
+
+        if (currentType === 'video' && !isVideo) {
+            alert('Por favor selecciona un video');
+            fileInput.value = '';
+            return;
+        }
+
+        // Mostrar nombre de archivo
+        fileLabel.textContent = file.name;
+
+        // Preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (isImage) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; border-radius: 12px; margin-top: 15px;">`;
+            } else if (isVideo) {
+                preview.innerHTML = `<video src="${e.target.result}" controls style="max-width: 100%; border-radius: 12px; margin-top: 15px;"></video>`;
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Actualizar accept según tipo de post
+    typeButtons.forEach((btn) => {
+        btn.addEventListener('click', function() {
+            const type = this.dataset.type;
+            if (type === 'photo') {
+                fileInput.setAttribute('accept', 'image/*');
+                fileLabel.textContent = 'Toca para seleccionar imagen';
+            } else if (type === 'video') {
+                fileInput.setAttribute('accept', 'video/*');
+                fileLabel.textContent = 'Toca para seleccionar video';
+            }
+            // Limpiar selección previa
+            fileInput.value = '';
+            preview.innerHTML = '';
+        });
+    });
 </script>
+
+<style>
+    .file-input {
+        display: none;
+    }
+
+    .file-input-wrapper {
+        position: relative;
+    }
+
+    .file-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        border: 2px dashed rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.05);
+        text-align: center;
+    }
+
+    .file-label:hover {
+        border-color: var(--accent-color, #ff6b9d);
+        background: rgba(255, 107, 157, 0.1);
+    }
+
+    .file-label:active {
+        transform: scale(0.98);
+    }
+
+    .file-label-text {
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .preview {
+        margin-top: 10px;
+    }
+
+    .preview img,
+    .preview video {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+</style>
 {% endblock %}

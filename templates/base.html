@@ -1,29 +1,45 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>{% block title %}Pulse - Lo que importa, dura{% endblock %}</title>
-    {% load static %}
     
     <!-- PWA Meta Tags -->
-    <meta name="description" content="Pulse - Red social donde lo que importa, dura">
-    <meta name="theme-color" content="#FF3B5C">
+    <meta name="description" content="Red social efímera donde lo que importa, dura más">
+    <meta name="theme-color" content="#ff6b9d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pulse">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/icon-192x192.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/icon-192x192.png' %}">
+    <link rel="apple-touch-icon" sizes="152x152" href="{% static 'img/icon-152x152.png' %}">
+    <link rel="apple-touch-icon" sizes="144x144" href="{% static 'img/icon-144x144.png' %}">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="{% static 'manifest.json' %}">
     
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" href="/media/logo/XX_Logo_Pulse_1.png">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/media/logo/XX_Logo_Pulse_1.png">
-    
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <script src="{% static 'js/theme.js' %}" defer></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado:', registration);
+                    })
+                    .catch(err => {
+                        console.log('Error al registrar Service Worker:', err);
+                    });
+            });
+        }
+    </script>
 </head>
 <body class="{% block body_class %}{% endblock %}">
     <nav class="navbar">
@@ -157,16 +173,5 @@
     <script src="{% static 'js/feed-header.js' %}"></script>
     <script src="{% static 'js/pull-to-refresh.js' %}"></script>
     <script src="{% static 'js/infinite-scroll.js' %}"></script>
-    
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/static/sw.js')
-                    .then(reg => console.log('Service Worker registrado'))
-                    .catch(err => console.log('Error al registrar SW:', err));
-            });
-        }
-    </script>
 </body>
 </html>

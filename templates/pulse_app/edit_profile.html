@@ -131,6 +131,47 @@
         </div>
 
         <div class="form-section">
+            <h2>Apariencia</h2>
+            
+            <!-- Tema oscuro/claro -->
+            <div class="form-group">
+                <label>Tema de la aplicación</label>
+                <div class="theme-selector">
+                    <button type="button" class="theme-option" data-theme="light" id="theme-light">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <span>Claro</span>
+                    </button>
+                    
+                    <button type="button" class="theme-option" data-theme="dark" id="theme-dark">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                        <span>Oscuro</span>
+                    </button>
+                    
+                    <button type="button" class="theme-option" data-theme="auto" id="theme-auto">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                        </svg>
+                        <span>Auto</span>
+                    </button>
+                </div>
+                <small class="form-help">Elige cómo quieres ver Pulse</small>
+            </div>
+        </div>
+
+        <div class="form-section">
             <h2>Cambiar Contraseña</h2>
             <small class="form-help">Deja estos campos vacíos si no quieres cambiar tu contraseña</small>
 
@@ -214,9 +255,84 @@
         counter.textContent = this.value.length + ' / 500 caracteres';
     });
 
+    // ========== SELECTOR DE TEMA ==========
+    // El tema se maneja automáticamente por theme.js
+    // Solo necesitamos inicializar el estado activo al cargar
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Esperar a que theme.js cargue
+        setTimeout(function() {
+            if (typeof getThemePreference === 'function') {
+                const currentPreference = getThemePreference();
+                document.querySelectorAll('.theme-option').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                const activeBtn = document.getElementById(`theme-${currentPreference}`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                }
+            }
+        }, 100);
+    });
+
     // Allow back navigation in edit profile
     if (window.innerWidth <= 768) {
         document.body.style.overscrollBehaviorX = 'auto';
     }
 </script>
+
+<style>
+    .theme-selector {
+        display: flex;
+        gap: 12px;
+        margin-top: 10px;
+    }
+
+    .theme-option {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .theme-option:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .theme-option.active {
+        background: rgba(255, 107, 157, 0.2);
+        border-color: var(--accent-color, #ff6b9d);
+        color: var(--accent-color, #ff6b9d);
+    }
+
+    .theme-option svg {
+        stroke-width: 2;
+    }
+
+    .theme-option span {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+        .theme-selector {
+            flex-direction: row;
+        }
+        
+        .theme-option {
+            padding: 16px 12px;
+        }
+    }
+</style>
 {% endblock %}

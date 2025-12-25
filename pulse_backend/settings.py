@@ -124,6 +124,17 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
+# CSRF Configuration
+CSRF_TRUSTED_ORIGINS = [
+    'https://pulse-app-3nnu.onrender.com',
+    'https://*.onrender.com',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
+CSRF_COOKIE_SECURE = False  # Cambiar a True en producción
+CSRF_COOKIE_HTTPONLY = False
+
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

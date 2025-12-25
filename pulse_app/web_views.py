@@ -92,14 +92,8 @@ def index(request):
             p.is_liked = False
             p.is_reposted = False
         
-        # Si es una encuesta, calcular porcentajes
-        if p.post_type == 'poll' and hasattr(p, 'poll'):
-            total_votes = sum(option.votes for option in p.poll.options.all())
-            for option in p.poll.options.all():
-                if total_votes > 0:
-                    option.percentage = int((option.votes / total_votes) * 100)
-                else:
-                    option.percentage = 0
+        # Si es una encuesta, el porcentaje se calcula automáticamente desde la propiedad
+        # del modelo PollOption, no necesita asignación manual
     
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')

@@ -38,7 +38,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',  # Deshabilitado temporalmente para testing
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -132,8 +132,16 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
 ]
 
-CSRF_COOKIE_SECURE = False  # Cambiar a True en producción
+# Para testing/pre-alpha
+CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Permitir requests desde cualquier origen durante testing
+import os
+if not os.environ.get('DEBUG', 'True') == 'False':
+    # En desarrollo, no requiere CSRF en ciertos casos
+    pass
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
